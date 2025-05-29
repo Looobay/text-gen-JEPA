@@ -1,0 +1,10 @@
+checkpoints/
+.venv/
+__pycache__/
+
+
+*.txt
+*.bin
+
+
+!requirements.txt
