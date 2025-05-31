@@ -22,6 +22,24 @@ And finally, you can run the `setup.sh` script to create the checkpoints structu
 sh setup.sh
 ```
 
+You also need to prepare the dataset for the training, so checkout in the `data` folder for more informations.
+
+## Training
+
+To train the model just run 
+
+```bash
+python3 train.py <dataset_name>
+```
+
+There is only one dataset in the repo `tiny_shakespeare` so to run it type:
+
+```bash
+python3 train.py shakespeare
+```
+
+(It's based on the folder name)
+
 ## NOTES:
 
 * During the training for each epoch we are training on the WHOLE `train` dataset, it can be really big and long. It's why I recommand you to stop the training early when you check the validation loss increases for too long.

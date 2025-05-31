@@ -21,8 +21,31 @@ class Encoder(nn.Module):
         self.embedding = nn.Embedding(config.VOCAB_SIZE, config.EMBEDDING_DIM)
 
     def forward(self, x):
-        x = self.embedding(x)
-        x = x.mean(dim=0)
+        embedded = self.embedding(x)
+
+        if embedded.ndim == 3:  # for x_batch (B, L, D)
+            # agregate the sequence dimension (L)
+            context_representation = embedded.mean(
+                dim=1
+            )  # (B, D)
+            return context_representation
+        elif embedded.ndim == 2:  # for y_batch (B, D)
+            return embedded
+        else:
+            raise ValueError(
+                f"Unsupported input dimension: {embedded.ndim}. Expected 2 or 3."
+            )
+    
+class Decoder(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.l1 = nn.Linear(config.PREDICTOR.output_dim, 512)
+        self.l2 = nn.Linear(512, config.VOCAB_SIZE)
+
+    def forward(self, x):
+        x = self.l1(x)
+        x = nn.GELU()(x)
+        x = self.l2(x)
         return x
 
 class TextGenJepa(nn.Module):
@@ -30,45 +53,20 @@ class TextGenJepa(nn.Module):
         super().__init__()
         self.encoder = Encoder()
         self.predictor = Predictor()
+        self.decoder = Decoder()
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.predictor(x)
-        return x
-
-class KTokenPredictor(nn.Module):
-    """ Predict the amount of K tokens in the predictor's output vector"""
-    def __init__(self):
-        super().__init__()
-        self.l1 = nn.Linear(config.PREDICTOR.output_dim, 200)
-        self.l2 = nn.Linear(200, 1)
-    
-    def forward(self, x):
-        n = self.l1(x)
-        n = nn.GELU()(n)
-        n = self.l2(n)
-        n = torch.round(n)
-        return n
-
-class LogitsGenerator(nn.Module):
-    """ Generate the logits for the sequence of tokens """
-    def __init__(self):
-        super().__init__()
-        self.l1 = nn.Linear(config.PREDICTOR.output_dim, config.VOCAB_SIZE)
-    
-    def forward(self, x):
-        x = self.l1(x)
-        return x
-
-class Decoder(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.k_token_predictor = KTokenPredictor()
-        self.logits_generator = LogitsGenerator()
-
-    def forward(self, x):
-        k_tokens = self.k_token_predictor(x)
-        k = int(k_tokens.item())
-        logits = self.logits_generator(x)
-        _, top_k_indices = torch.topk(logits, k, dim=1)
-        return top_k_indices
+        # x shape: (BATCH_SIZE, BLOCK_SIZE)
+        context_embedding = self.encoder(
+            x
+        )  # Output shape: (BATCH_SIZE, EMBEDDING_DIM)
+        
+        predicted_embedding = self.predictor(
+            context_embedding
+        )  # Output shape: (BATCH_SIZE, EMBEDDING_DIM)
+        
+        decoder_logits = self.decoder(
+            predicted_embedding
+        )  # Output shape: (BATCH_SIZE, VOCAB_SIZE)
+        
+        return predicted_embedding, decoder_logits

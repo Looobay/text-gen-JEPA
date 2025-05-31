@@ -16,14 +16,14 @@ class Config:
         self.PREDICTOR = PredictorConfig()
         self.VOCAB_SIZE = self.tokenizer.n_vocab
         self.EMBEDDING_DIM = embed_dim
-        self.LR = 1e-5
-        self.EPOCHS = 2
+        self.LR = 1e-4
+        self.EPOCHS = 1
         self.device = device
         self.BATCH_SIZE = 20 # seq per batch
         self.BLOCK_SIZE = 64 # seq len
         self.EMA_DECAY = 0.99 # EMA decay rate
         self.EVAL_INTERVAL = 25  # evaluate every N batchs
-        self.DECODER_LOSS_WEIGHT = 1.0 # weight of the decoder loss
+        self.DECODER_LOSS_WEIGHT = 0.5 # weight of the decoder loss
 
     def print(self):
         print("===CONFIG===")
