@@ -9,7 +9,7 @@ if project_root not in sys.path:
 import requests
 import tiktoken
 import numpy as np
-from config import TRAIN_SPLIT
+from config import config
 
 print("Setting up 'tiny_shakespeare' dataset...")
 
@@ -22,8 +22,8 @@ if not os.path.exists(input_file_path):
 
 with open(input_file_path, 'r', encoding='utf-8') as f:
     data = f.read()
-train_data = data[:int(len(data)*TRAIN_SPLIT)]
-val_data = data[int(len(data)*TRAIN_SPLIT):]
+train_data = data[:int(len(data)*config.TRAIN_SPLIT)]
+val_data = data[int(len(data)*config.TRAIN_SPLIT):]
 
 enc = tiktoken.encoding_for_model("gpt-2")
 train_ids = enc.encode(train_data)

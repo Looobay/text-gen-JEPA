@@ -7,9 +7,9 @@ def check_backend():
     global device
     if torch.backends.mps.is_available():
         device = torch.device("mps")
-    elif torch.backends.cuda.is_available():
+    elif torch.cuda.is_available():
         device = torch.device("cuda")
-    elif torch.backends.cpu.is_available():
+    elif torch.cpu.is_available():
         device = torch.device("cpu")
 
 check_backend()
