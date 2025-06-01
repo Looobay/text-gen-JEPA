@@ -1,6 +1,6 @@
 import tiktoken
 from utils import device
-embed_dim = 768
+embed_dim = 1024
 
 class PredictorConfig:
     def __init__(self):
@@ -17,12 +17,12 @@ class Config:
         self.VOCAB_SIZE = self.tokenizer.n_vocab
         self.EMBEDDING_DIM = embed_dim
         self.LR = 5e-5
-        self.EPOCHS = 1
+        self.EPOCHS = 3
         self.device = device
-        self.BATCH_SIZE = 20 # seq per batch
+        self.BATCH_SIZE = 32 # seq per batch
         self.BLOCK_SIZE = 64 # seq len
         self.EMA_DECAY = 0.99 # EMA decay rate
-        self.EVAL_INTERVAL = 25  # evaluate every N batchs
+        self.EVAL_INTERVAL = 50  # evaluate every N batchs
         self.DECODER_LOSS_WEIGHT = 0.5 # weight of the decoder loss
 
     def print(self):
