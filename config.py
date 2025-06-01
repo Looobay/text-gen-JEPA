@@ -16,7 +16,7 @@ class Config:
         self.PREDICTOR = PredictorConfig()
         self.VOCAB_SIZE = self.tokenizer.n_vocab
         self.EMBEDDING_DIM = embed_dim
-        self.LR = 1e-4
+        self.LR = 5e-5
         self.EPOCHS = 1
         self.device = device
         self.BATCH_SIZE = 20 # seq per batch

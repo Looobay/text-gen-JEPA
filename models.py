@@ -15,27 +15,28 @@ class Predictor(nn.Module):
         return x
 
 class Encoder(nn.Module):
-    # TODO: the Encoder should be a small Transformer to encode the context and micro details
-    def __init__(self):
+    def __init__(self, batch=True):
         super().__init__()
+        self.batch = batch
+        self.layers = 2
         self.embedding = nn.Embedding(config.VOCAB_SIZE, config.EMBEDDING_DIM)
+        self.rnn = nn.RNN(config.EMBEDDING_DIM, config.EMBEDDING_DIM, self.layers, batch_first=batch)
 
     def forward(self, x):
+        batch_size = x.size(0)
         embedded = self.embedding(x)
+        if embedded.dim() == 2:
+            if self.batch:
+                embedded = embedded.unsqueeze(1)
+            else:
+                embedded = embedded.unsqueeze(0)
+        elif embedded.dim() == 3:
+            if not self.batch:
+                embedded = embedded.transpose(0, 1)
+        h0 = torch.zeros(self.layers, batch_size, config.EMBEDDING_DIM).to(x.device)
+        _, hn = self.rnn(embedded, h0)
+        return hn[-1]
 
-        if embedded.ndim == 3:  # for x_batch (B, L, D)
-            # agregate the sequence dimension (L)
-            context_representation = embedded.mean(
-                dim=1
-            )  # (B, D)
-            return context_representation
-        elif embedded.ndim == 2:  # for y_batch (B, D)
-            return embedded
-        else:
-            raise ValueError(
-                f"Unsupported input dimension: {embedded.ndim}. Expected 2 or 3."
-            )
-    
 class Decoder(nn.Module):
     def __init__(self):
         super().__init__()

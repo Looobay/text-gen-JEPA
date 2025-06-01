@@ -7,6 +7,7 @@ from utils import model_to_device, print_parameters
 from models import TextGenJepa, Encoder
 from config import config
 from safetensors.torch import save_file
+import glob
 
 config.print()
 
@@ -193,6 +194,32 @@ print("💾 Checkpoints directories ensured at ./checkpoints/")
 train_loss_store = []
 val_metrics_store = []
 
+def cleanup_old_checkpoints(checkpoint_dir, max_files=2):
+    """
+    Remove oldest checkpoint files, keeping only the max_files most recent ones.
+    """
+    if not os.path.exists(checkpoint_dir):
+        return
+    
+    # Get all .safetensors files in the directory
+    checkpoint_files = glob.glob(os.path.join(checkpoint_dir, "*.safetensors"))
+    
+    if len(checkpoint_files) <= max_files:
+        return
+    
+    # Sort files by modification time (oldest first)
+    checkpoint_files.sort(key=lambda x: os.path.getmtime(x))
+    
+    # Remove oldest files, keeping only max_files
+    files_to_remove = checkpoint_files[:-max_files]
+    
+    for file_path in files_to_remove:
+        try:
+            os.remove(file_path)
+            print(f"🗑️ Removed old checkpoint: {os.path.basename(file_path)}")
+        except OSError as e:
+            print(f"Warning: Could not remove {file_path}: {e}")
+
 for epoch in range(config.EPOCHS):
     gen_model.train(True)
     target_encoder_model.eval() 
@@ -286,6 +313,10 @@ for epoch in range(config.EPOCHS):
                         target_encoder_model.state_dict(),
                         f"checkpoints/enc/best_model_epoch{epoch+1}_batch{batch_idx+1}.safetensors",
                     )
+                    
+                    # Clean up old checkpoints to keep only 2 most recent files
+                    cleanup_old_checkpoints("checkpoints/gen", max_files=4)
+                    cleanup_old_checkpoints("checkpoints/enc", max_files=4)
             elif eval_metrics and np.isnan(eval_metrics["val_loss_decode"]):
                 print(
                     f"\nEval Epoch {epoch+1}, Batch {batch_idx+1}: Validation metrics contain NaN. Skipping."
